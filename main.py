@@ -13,11 +13,6 @@ HEADERS = {
     "Referer": "https://stadtundland.de/",
 }
 
-PAYLOAD = {
-    "offset": 0,
-    "cat": "parken"
-}
-
 KNOWN_FILE = "known_offers.json"
 
 
@@ -51,16 +46,39 @@ def send_telegram(text):
 
 
 def get_offers():
-    response = requests.post(
-        API_URL,
-        json=PAYLOAD,
-        headers=HEADERS,
-        timeout=30,
-    )
+    all_offers = []
+    offset = 0
 
-    response.raise_for_status()
+    while True:
+        response = requests.post(
+            API_URL,
+            json={
+                "offset": offset,
+                "cat": "parken",
+            },
+            headers=HEADERS,
+            timeout=30,
+        )
 
-    return response.json()["data"]
+        response.raise_for_status()
+
+        result = response.json()
+
+        offers = result["data"]
+
+        if not offers:
+            break
+
+        print(f"Offset {offset}: {len(offers)} Angebote geladen")
+
+        all_offers.extend(offers)
+
+        if len(all_offers) >= result["count"]:
+            break
+
+        offset += len(offers)
+
+    return all_offers
 
 
 def build_address(offer):
@@ -78,7 +96,7 @@ known = load_known()
 
 offers = get_offers()
 
-print(f"{len(offers)} Angebote gefunden.")
+print(f"Insgesamt {len(offers)} Angebote gefunden.")
 
 for offer in offers:
 
