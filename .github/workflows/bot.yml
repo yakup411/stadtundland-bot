@@ -1,33 +1,3 @@
-name: STADT UND LAND Bot
-
-on:
-  schedule:
-    - cron: "*/15 * * * *"
-  workflow_dispatch:
-
-permissions:
-  contents: write
-
-jobs:
-  run:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run bot
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python main.py
-
       - name: Commit updated files
         run: |
           git config user.name "github-actions[bot]"
@@ -36,5 +6,7 @@ jobs:
           git add known_offers.json coordinates.json
 
           git diff --cached --quiet || git commit -m "Update known offers"
+
+          git pull --rebase origin main || true
 
           git push
